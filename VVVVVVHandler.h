@@ -1,13 +1,17 @@
 #ifndef VVVVVVHANDLER_H
 #define VVVVVVHANDLER_H
 
-#include <iostream>
 #include <QXmlDefaultHandler>
 #include <QXmlParseException>
 #include <QXmlAttributes>
 #include <QStringList>
 #include <QString>
-#include <QHash>
+#include <QList>
+#include <QPair>
+#include <QRect>
+#include <QPoint>
+#include <QPixmap>
+#include <QBitmap>
 
 class VVVVVVHandler : public QXmlDefaultHandler
 {
@@ -31,6 +35,12 @@ private:
 	int mapheight;
 	
 	QList<int> chunks;
+	QList< QPair<QPoint, QRect> > sprites;
+	QList< QPair<QPoint, QPixmap> > pixmaps;
+	QList< QPair<QPoint, QColor> > crew;
+	QList< QPair<QPoint, QBitmap> > whiteObjets;
+	
+	QBitmap character, checkdown, checkup, trinket;
 };
 
 #endif
