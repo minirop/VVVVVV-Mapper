@@ -30,5 +30,5 @@ int main(int argc, char** argv)
 		qWarning("Error: could not parse file.");
 	}
 	
-	return app.exec();
+	return 0;
 }
