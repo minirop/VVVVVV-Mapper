@@ -18,7 +18,7 @@ VVVVVVHandler::VVVVVVHandler()
 	trinket = pix.mask();
 }
 
-bool VVVVVVHandler::startElement(const QString & namespaceURI, const QString & localName, const QString & qName, const QXmlAttributes & atts)
+bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString & localName, const QString & /*qName*/, const QXmlAttributes & atts)
 {
 	currentTag = localName;
 	currentAttributes = atts;
@@ -236,23 +236,23 @@ void VVVVVVHandler::saveTo(const QString & filename)
 	qDebug() << "finished";
 }
 
-bool VVVVVVHandler::endElement(const QString & namespaceURI, const QString & localName, const QString & qName)
+bool VVVVVVHandler::endElement(const QString & /*namespaceURI*/, const QString & /*localName*/, const QString & /*qName*/)
 {
 	currentTag = QString();
 	return true;
 }
 
-bool VVVVVVHandler::error(const QXmlParseException & exception)
+bool VVVVVVHandler::error(const QXmlParseException & /*exception*/)
 {
 	return false;
 }
 
-bool VVVVVVHandler::fatalError(const QXmlParseException & exception)
+bool VVVVVVHandler::fatalError(const QXmlParseException & /*exception*/)
 {
 	return false;
 }
 
-bool VVVVVVHandler::warning (const QXmlParseException & exception)
+bool VVVVVVHandler::warning (const QXmlParseException & /*exception*/)
 {
 	return false;
 }
