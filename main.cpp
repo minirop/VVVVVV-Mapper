@@ -1,5 +1,6 @@
 #include "VVVVVVHandler.h"
 #include <QApplication>
+#include <QFileInfo>
 
 int main(int argc, char** argv)
 {
@@ -21,9 +22,14 @@ int main(int argc, char** argv)
 	QXmlSimpleReader reader;
 	reader.setContentHandler(handler);
 	reader.setErrorHandler(handler);
-	if(reader.parse(new QXmlInputSource(new QFile(argv[1]))))
+	
+	QFile file(argv[1]);
+	QXmlInputSource inputSource(&file);
+	if(reader.parse(&inputSource))
 	{
-		handler->saveTo("output.png");
+		QFileInfo fileInfo(file);
+		QString fileName(fileInfo.completeBaseName() + ".png");
+		handler->saveTo(fileName);
 	}
 	else
 	{
