@@ -33,12 +33,16 @@ private:
 	
 	int mapwidth;
 	int mapheight;
+	int mapwidthScreen;
+	int mapheightScreen;
 	
 	QList<int> chunks;
 	QList< QPair<QPoint, QRect> > sprites;
 	QList< QPair<QPoint, QPixmap> > pixmaps;
 	QList< QPair<QPoint, QColor> > crew;
 	QList< QPair<QPoint, QBitmap> > whiteObjets;
+	
+	QVector< int > screenTilesets;
 	
 	QBitmap character, checkdown, checkup, trinket;
 };

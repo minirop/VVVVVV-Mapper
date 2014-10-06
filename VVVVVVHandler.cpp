@@ -2,6 +2,10 @@
 #include <QPainter>
 #include <QDebug>
 
+const int SCREEN_WIDTH = 40;
+const int SCREEN_HEIGHT = 30;
+const int MAX_SCREEN_WIDTH = 20;
+
 VVVVVVHandler::VVVVVVHandler()
 {
 	QPixmap spriteset("sprites.png");
@@ -23,6 +27,13 @@ bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString
 	currentTag = localName;
 	currentAttributes = atts;
 	
+	// those elements don't have contents, so characters() is never called.
+	if(currentTag == "edLevelClass")
+	{
+		int tileset = currentAttributes.value("tileset").toInt();
+		screenTilesets.push_back(tileset < 1 ? 0 : 1);
+	}
+	
 	return true;
 }
 
@@ -30,11 +41,13 @@ bool VVVVVVHandler::characters(const QString & ch)
 {
 	if(currentTag == "mapwidth")
 	{
-		mapwidth = ch.toInt()*40;
+		mapwidthScreen = ch.toInt();
+		mapwidth = mapwidthScreen * SCREEN_WIDTH;
 	}
 	else if(currentTag == "mapheight")
 	{
-		mapheight = ch.toInt()*30;
+		mapheightScreen = ch.toInt();
+		mapheight = mapheightScreen * SCREEN_HEIGHT;
 	}
 	else if(currentTag == "edentity")
 	{
@@ -100,7 +113,7 @@ bool VVVVVVHandler::characters(const QString & ch)
 				QPixmap line(2, p3);
 				line.fill();
 				
-				point = QPoint(x*8+3, (y/30)*240 + p2*8);
+				point = QPoint(x*8+3, (y/SCREEN_HEIGHT)*240 + p2*8);
 				pixmaps.push_back(qMakePair(point, line));
 			}
 			else
@@ -108,7 +121,7 @@ bool VVVVVVHandler::characters(const QString & ch)
 				QPixmap line(p3, 2);
 				line.fill();
 				
-				point = QPoint((x/40)*320 + p2*8, y*8+3);
+				point = QPoint((x/SCREEN_WIDTH)*320 + p2*8, y*8+3);
 				pixmaps.push_back(qMakePair(point, line));
 			}
 			break;
@@ -180,7 +193,10 @@ bool VVVVVVHandler::characters(const QString & ch)
 
 void VVVVVVHandler::saveTo(const QString & filename)
 {
-	QPixmap tileset("tiles.png");
+	QVector<QPixmap> tilesets(2);
+	tilesets[0].load("tiles.png");
+	tilesets[1].load("tiles2.png");
+	
 	QPixmap spriteset("sprites.png");
 	QPixmap image(mapwidth*8, mapheight*8);
 	image.fill(Qt::black);
@@ -193,9 +209,12 @@ void VVVVVVHandler::saveTo(const QString & filename)
 		for(int x = 0;x < mapwidth;x++)
 		{
 			int ch = chunks[x+y*mapwidth];
-			int xt = ch%40;
-			int yt = ch/40;
-			p.drawPixmap(x*8, y*8, tileset.copy(xt*8, yt*8, 8, 8));
+			int xt = ch % SCREEN_WIDTH;
+			int yt = ch / SCREEN_WIDTH;
+			int screenx = x / SCREEN_WIDTH;
+			int screeny = y / SCREEN_HEIGHT;
+			int tilesetID = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH];
+			p.drawPixmap(x*8, y*8, tilesets[tilesetID].copy(xt*8, yt*8, 8, 8));
 		}
 	}
 	
