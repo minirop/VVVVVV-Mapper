@@ -11,14 +11,28 @@ VVVVVVHandler::VVVVVVHandler() : spriteset("sprites.png")
 	// crew
 	QPixmap pix = spriteset.copy(QRect(4, 31, 16, 24));
 	character = pix.mask();
+	
 	// checkpoints
 	pix = spriteset.copy(QRect(288, 32, 16, 16));
 	checkdown = pix.mask();
 	pix = spriteset.copy(QRect(256, 32, 16, 16));
 	checkup = pix.mask();
+	
+	// terminals
+	pix = spriteset.copy(QRect(128, 24, 16, 24));
+	terminaldown = pix.mask();
+	pix = spriteset.copy(QRect(160, 24, 16, 24));
+	terminalup = pix.mask();
+	
 	// trinket
 	pix = spriteset.copy(QRect(320, 32, 16, 16));
 	trinket = pix.mask();
+	
+	// teleports
+	pix = spriteset.copy(QRect(192, 32, 16, 16));
+	teleportbig = pix.mask();
+	pix = spriteset.copy(QRect(224, 32, 16, 16));
+	teleportsmall = pix.mask();
 	
 	// colors
 	for(int i = 0;i < 32;i++)
@@ -142,6 +156,14 @@ bool VVVVVVHandler::characters(const QString & ch)
 			}
 			break;
 		case 13: // mini-teleporters
+			// p1 = destination X, p2 = destination Y
+			// I use "big" as the entry and "small" and the exit.
+			{
+				point = QPoint(x*8, y*8);
+				whiteObjets.push_back(qMakePair(point, teleportbig));
+				point = QPoint(p1*8, p2*8);
+				whiteObjets.push_back(qMakePair(point, teleportsmall));
+			}
 			break;
 		case 15: // crew members
 			// p1 = 0: cyan / pink / yellow / red / green / 5: blue
@@ -182,15 +204,15 @@ bool VVVVVVHandler::characters(const QString & ch)
 					rect = QRect(7, 2, 10, 21);
 				
 				point = QPoint(x*8, y*8);
-				QPixmap pix = spriteset.copy(QRect(4, 31, 16, 24));
+				QPixmap pix = spriteset.copy(QRect(4, 0, 16, 23));
 				QBitmap characterMask = pix.mask();
-				QPixmap characterChief(characterMask.size());
+				QPixmap characterChief(QSize(16, 24));
 				characterChief.fill(Qt::transparent);
 				
 				QPainter cPainter;
 				cPainter.begin(&characterChief);
 				cPainter.setPen(QColor(127, 185, 190));
-				cPainter.drawPixmap(0, 0, characterMask);
+				cPainter.drawPixmap(0, 1, characterMask);
 				cPainter.end();
 				
 				sprites.push_back(qMakePair(point, characterChief));
@@ -199,6 +221,15 @@ bool VVVVVVHandler::characters(const QString & ch)
 		case 17: // text string
 			break;
 		case 18: // terminal
+			// p1 = is upside down ? 1 = no, 0 = yes
+			{
+				QBitmap bit(terminalup);
+				if(p1) // unsure
+					bit = terminaldown;
+				
+				point = QPoint(x*8, y*8);
+				whiteObjets.push_back(qMakePair(point, bit));
+			}
 			break;
 		case 19: // script box
 			break;

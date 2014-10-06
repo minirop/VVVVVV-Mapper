@@ -47,7 +47,8 @@ private:
 	
 	QVector< QMap<QString, int> > screenTilesets;
 	
-	QBitmap character, checkdown, checkup, trinket;
+	QBitmap character, checkdown, checkup, trinket, terminaldown, terminalup;
+	QBitmap teleportbig, teleportsmall;
 	QVector<QPoint> colorPositionFromId[2];
 };
 
