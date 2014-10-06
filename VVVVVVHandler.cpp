@@ -6,11 +6,10 @@ const int SCREEN_WIDTH = 40;
 const int SCREEN_HEIGHT = 30;
 const int MAX_SCREEN_WIDTH = 20;
 
-VVVVVVHandler::VVVVVVHandler()
+VVVVVVHandler::VVVVVVHandler() : spriteset("sprites.png")
 {
-	QPixmap spriteset("sprites.png");
 	// crew
-	QPixmap pix = spriteset.copy(QRect(7, 2, 10, 21));
+	QPixmap pix = spriteset.copy(QRect(4, 31, 16, 24));
 	character = pix.mask();
 	// checkpoints
 	pix = spriteset.copy(QRect(288, 32, 16, 16));
@@ -20,6 +19,19 @@ VVVVVVHandler::VVVVVVHandler()
 	// trinket
 	pix = spriteset.copy(QRect(320, 32, 16, 16));
 	trinket = pix.mask();
+	
+	// colors
+	for(int i = 0;i < 32;i++)
+	{
+		int x = (((i % 11 + 1) * 3) + 1) * 8;
+		int y = ((i / 11 + 1) * 5) * 8;
+		colorPositionFromId[0].push_back(QPoint(x, y));
+	}
+	
+	colorPositionFromId[1].push_back(QPoint(37 * 8, 5 * 8));
+	colorPositionFromId[1].push_back(QPoint(37 * 8, 10 * 8));
+	colorPositionFromId[1].push_back(QPoint(34 * 8, 15 * 8));
+	colorPositionFromId[1].push_back(QPoint(37 * 8, 15 * 8));
 }
 
 bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString & localName, const QString & /*qName*/, const QXmlAttributes & atts)
@@ -30,8 +42,10 @@ bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString
 	// those elements don't have contents, so characters() is never called.
 	if(currentTag == "edLevelClass")
 	{
-		int tileset = currentAttributes.value("tileset").toInt();
-		screenTilesets.push_back(tileset < 1 ? 0 : 1);
+		QMap<QString, int> tilesetMap;
+		tilesetMap["id"] = (currentAttributes.value("tileset").toInt() < 1 ? 0 : 1);
+		tilesetMap["tilecol"] = currentAttributes.value("tilecol").toInt();
+		screenTilesets.push_back(tilesetMap);
 	}
 	
 	return true;
@@ -76,14 +90,16 @@ bool VVVVVVHandler::characters(const QString & ch)
 			// - 6 short left conveyor
 			// - 7 long right conveyor
 			// - 8 long left conveyor
+			if(p1 >= 0 && p1 < 4)
+			{
+				point = QPoint(x, y);
+				plainColoredObjects.push_back(point);
+			}
 			break;
 		case 3: // disappear
 			{
-				QPixmap pix(32, 8);
-				pix.fill();
-				
-				point = QPoint(x*8, y*8);
-				pixmaps.push_back(qMakePair(point, pix));
+				point = QPoint(x, y);
+				plainColoredObjects.push_back(point);
 			}
 			break;
 		case 9: // trinket
@@ -134,38 +150,51 @@ bool VVVVVVHandler::characters(const QString & ch)
 				switch(p1)
 				{
 					case 0:
-						color = QColor(0, 255, 255);
+						color = QColor(127, 185, 190);
 						break;
 					case 1:
-						color = QColor(255, 0, 255);
+						color = QColor(208, 113, 203);
 						break;
 					case 2:
-						color = QColor(255, 255, 0);
+						color = QColor(211, 203, 113);
 						break;
 					case 3:
-						color = QColor(255, 0, 0);
+						color = QColor(252, 63, 63);
 						break;
 					case 4:
-						color = QColor(0, 255, 0);
+						color = QColor(94, 213, 113);
 						break;
 					case 5:
 					default:
-						color = QColor(0, 0, 255);
+						color = QColor(75, 75, 230);
 				}
 				
-				point = QPoint(x*8-1, y*8+3);
+				point = QPoint(x*8, y*8);
 				crew.push_back(qMakePair(point, color));
 			}
 			break;
 		case 16: // captain/start
-			// p1 = is looking left ? 1 = <<, 0 = >>
-			if(p1)
-				rect = QRect(103, 2, 10, 21);
-			else
-				rect = QRect(7, 2, 10, 21);
-			
-			point = QPoint(x*8-1, y*8+3);
-			sprites.push_back(qMakePair(point, rect));
+			{
+				// p1 = is looking left ? 1 = <<, 0 = >>
+				if(p1)
+					rect = QRect(103, 2, 10, 21);
+				else
+					rect = QRect(7, 2, 10, 21);
+				
+				point = QPoint(x*8, y*8);
+				QPixmap pix = spriteset.copy(QRect(4, 31, 16, 24));
+				QBitmap characterMask = pix.mask();
+				QPixmap characterChief(characterMask.size());
+				characterChief.fill(Qt::transparent);
+				
+				QPainter cPainter;
+				cPainter.begin(&characterChief);
+				cPainter.setPen(QColor(127, 185, 190));
+				cPainter.drawPixmap(0, 0, characterMask);
+				cPainter.end();
+				
+				sprites.push_back(qMakePair(point, characterChief));
+			}
 			break;
 		case 17: // text string
 			break;
@@ -213,16 +242,16 @@ void VVVVVVHandler::saveTo(const QString & filename)
 			int yt = ch / SCREEN_WIDTH;
 			int screenx = x / SCREEN_WIDTH;
 			int screeny = y / SCREEN_HEIGHT;
-			int tilesetID = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH];
+			int tilesetID = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["id"];
 			p.drawPixmap(x*8, y*8, tilesets[tilesetID].copy(xt*8, yt*8, 8, 8));
 		}
 	}
 	
-	QListIterator< QPair< QPoint, QRect > > i(sprites);
+	QListIterator< QPair< QPoint, QPixmap > > i(sprites);
 	while(i.hasNext())
 	{
-		QPair<QPoint, QRect> pair = i.next();
-		p.drawPixmap(pair.first, spriteset.copy(pair.second));
+		QPair< QPoint, QPixmap > pair = i.next();
+		p.drawPixmap(pair.first, pair.second);
 	}
 	
 	QListIterator< QPair< QPoint, QPixmap > > ip(pixmaps);
@@ -246,6 +275,26 @@ void VVVVVVHandler::saveTo(const QString & filename)
 		QPair<QPoint, QBitmap> pair = iw.next();
 		p.setPen(Qt::white);
 		p.drawPixmap(pair.first, pair.second);
+	}
+	
+	QListIterator< QPoint > ico(plainColoredObjects);
+	while(ico.hasNext())
+	{
+		QPoint pt = ico.next();
+		
+		int screenx = pt.x() / SCREEN_WIDTH;
+		int screeny = pt.y() / SCREEN_HEIGHT;
+		int tileset = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["id"];
+		int tilecol = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["tilecol"];
+		
+		QPoint pos = colorPositionFromId[tileset][tilecol];
+		QRect srcRect(pos, QSize(8, 8));
+		
+		QPixmap copy = tilesets[0].copy(srcRect);
+		for(int i = 0;i < 4;i++)
+		{
+			p.drawPixmap((pt.x() + i) * 8, pt.y() * 8, copy);
+		}
 	}
 	
 	p.end();

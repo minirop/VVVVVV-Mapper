@@ -31,20 +31,24 @@ private:
 	QString currentTag;
 	QXmlAttributes currentAttributes;
 	
+	QPixmap spriteset;
+	
 	int mapwidth;
 	int mapheight;
 	int mapwidthScreen;
 	int mapheightScreen;
 	
 	QList<int> chunks;
-	QList< QPair<QPoint, QRect> > sprites;
+	QList< QPair<QPoint, QPixmap > > sprites;
 	QList< QPair<QPoint, QPixmap> > pixmaps;
 	QList< QPair<QPoint, QColor> > crew;
 	QList< QPair<QPoint, QBitmap> > whiteObjets;
+	QList< QPoint > plainColoredObjects;
 	
-	QVector< int > screenTilesets;
+	QVector< QMap<QString, int> > screenTilesets;
 	
 	QBitmap character, checkdown, checkup, trinket;
+	QVector<QPoint> colorPositionFromId[2];
 };
 
 #endif
