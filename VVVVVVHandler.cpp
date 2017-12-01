@@ -39,13 +39,39 @@ VVVVVVHandler::VVVVVVHandler() : spriteset("sprites.png")
 	{
 		int x = (((i % 11 + 1) * 3) + 1) * 8;
 		int y = ((i / 11 + 1) * 5) * 8;
-		colorPositionFromId[0].push_back(QPoint(x, y));
+		colorPositionFromId.push_back(QPoint(x, y));
 	}
 	
-	colorPositionFromId[1].push_back(QPoint(37 * 8, 5 * 8));
-	colorPositionFromId[1].push_back(QPoint(37 * 8, 10 * 8));
-	colorPositionFromId[1].push_back(QPoint(34 * 8, 15 * 8));
-	colorPositionFromId[1].push_back(QPoint(37 * 8, 15 * 8));
+	colorFromId[1].push_back(QColor("#39568c"));
+	colorFromId[1].push_back(QColor("#9c2a2a"));
+	colorFromId[1].push_back(QColor("#2a9c9b"));
+	colorFromId[1].push_back(QColor("#7d24a2"));
+	colorFromId[1].push_back(QColor("#bfc600"));
+	colorFromId[1].push_back(QColor("#00c67e"));
+	colorFromId[1].push_back(QColor("#e06eb1"));
+	colorFromId[1].push_back(QColor("#ff8e57"));
+
+	colorFromId[2].push_back(QColor("#00a5ce"));
+	colorFromId[2].push_back(QColor("#ce0500"));
+	colorFromId[2].push_back(QColor("#ce00a0"));
+	colorFromId[2].push_back(QColor("#1b43ff"));
+	colorFromId[2].push_back(QColor("#c2ce00"));
+	colorFromId[2].push_back(QColor("#00ce27"));
+
+	colorFromId[3].push_back(QColor("#71b2c5"));
+	colorFromId[3].push_back(QColor("#c57177"));
+	colorFromId[3].push_back(QColor("#c471c5"));
+	colorFromId[3].push_back(QColor("#9571c5"));
+	colorFromId[3].push_back(QColor("#c5b671"));
+	colorFromId[3].push_back(QColor("#8dc571"));
+	colorFromId[3].push_back(QColor("#6d6d6d"));
+
+	colorFromId[4].push_back(QColor("#00ce27"));
+	colorFromId[4].push_back(QColor("#00a5ce"));
+	colorFromId[4].push_back(QColor("#c2ce00"));
+	colorFromId[4].push_back(QColor("#ce00a0"));
+	colorFromId[4].push_back(QColor("#1b43ff"));
+	colorFromId[4].push_back(QColor("#ce0500"));
 }
 
 bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString & localName, const QString & /*qName*/, const QXmlAttributes & atts)
@@ -57,7 +83,8 @@ bool VVVVVVHandler::startElement(const QString & /*namespaceURI*/, const QString
 	if(currentTag == "edLevelClass")
 	{
 		QMap<QString, int> tilesetMap;
-		tilesetMap["id"] = (currentAttributes.value("tileset").toInt() < 1 ? 0 : 1);
+		tilesetMap["tileset"] = currentAttributes.value("tileset").toInt();
+		tilesetMap["id"] = tilesetMap["tileset"] > 1 ? 1 : 0;
 		tilesetMap["tilecol"] = currentAttributes.value("tilecol").toInt();
 		screenTilesets.push_back(tilesetMap);
 	}
@@ -257,7 +284,6 @@ void VVVVVVHandler::saveTo(const QString & filename)
 	tilesets[0].load("tiles.png");
 	tilesets[1].load("tiles2.png");
 	
-	QPixmap spriteset("sprites.png");
 	QPixmap image(mapwidth*8, mapheight*8);
 	image.fill(Qt::black);
 	
@@ -312,16 +338,34 @@ void VVVVVVHandler::saveTo(const QString & filename)
 	while(ico.hasNext())
 	{
 		QPoint pt = ico.next();
-		
+
 		int screenx = pt.x() / SCREEN_WIDTH;
 		int screeny = pt.y() / SCREEN_HEIGHT;
-		int tileset = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["id"];
+		int id = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["id"];
+		int tileset = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["tileset"];
 		int tilecol = screenTilesets[screenx+screeny*MAX_SCREEN_WIDTH]["tilecol"];
-		
-		QPoint pos = colorPositionFromId[tileset][tilecol];
-		QRect srcRect(pos, QSize(8, 8));
-		
-		QPixmap copy = tilesets[0].copy(srcRect);
+
+		QPixmap copy;
+		if (id == 0)
+		{
+			QPoint pos = colorPositionFromId[tilecol];
+			QRect srcRect(pos, QSize(8, 8));
+			copy = tilesets[0].copy(srcRect);
+		}
+		else
+		{
+			if (tileset > 4 || tilecol > colorFromId[tileset].size())
+			{
+				qDebug() << "ERROR COLOUR" << tileset << ", " << tilecol << ">" << colorFromId[tileset].size();
+				copy = tilesets[0];
+			}
+			else
+			{
+				copy = QPixmap(8, 8);
+				copy.fill(colorFromId[tileset][tilecol]);
+			}
+		}
+
 		for(int i = 0;i < 4;i++)
 		{
 			p.drawPixmap((pt.x() + i) * 8, pt.y() * 8, copy);

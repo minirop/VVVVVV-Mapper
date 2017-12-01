@@ -49,7 +49,8 @@ private:
 	
 	QBitmap character, checkdown, checkup, trinket, terminaldown, terminalup;
 	QBitmap teleportbig, teleportsmall;
-	QVector<QPoint> colorPositionFromId[2];
+	QVector<QPoint> colorPositionFromId;
+	QVector<QColor> colorFromId[5];
 };
 
 #endif
